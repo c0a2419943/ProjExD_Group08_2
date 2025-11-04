@@ -239,7 +239,7 @@ def reset_game():
 
 # --- 初期設定 ---
 reset_game()
-target_score = 30
+target_score = 60
 INVINCIBLE_DURATION = 10000
 start = pg.time.get_ticks()
 pickup_msg = ""
@@ -276,7 +276,7 @@ while True:
             for _ in hits:
                 boss.hp -= 1
                 if boss.hp <= 0:
-                    score += 50  # スコアを50獲得
+                    score += 30  # スコアを30獲得
                     boss.kill()  # ボスを消す
                     bosses = False  # ボス状態を解除
                     frame_count = 0  # カウントリセット
