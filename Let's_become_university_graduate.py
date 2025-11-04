@@ -1,6 +1,7 @@
 import pygame as pg
 import random
 import sys
+import time
 import os
 
 # --- 初期設定 ---
@@ -66,6 +67,7 @@ class Player(pg.sprite.Sprite):
         self.image = player_img
         self.rect = self.image.get_rect(center=(WIDTH//2, HEIGHT-60))
         self.speed = 6
+
 
     def update(self):
         """プレイヤー位置を更新する。キー入力に応じて移動。"""
@@ -147,7 +149,6 @@ class Report(pg.sprite.Sprite):
         self.rect.y += self.speed
         if self.rect.top > HEIGHT:
             self.kill()
-
 # --- グループ定義 ---
 all_sprites = pg.sprite.Group()
 pencils = pg.sprite.Group()
@@ -156,7 +157,6 @@ enemy_reports = pg.sprite.Group()
 
 player = Player()
 all_sprites.add(player)   # ← ここは必ず追加しておく（描画されるように）
-
 # 敵を追加
 for i in range(5):
     e = Enemy()
@@ -164,7 +164,14 @@ for i in range(5):
     all_sprites.add(e)
 
 score = 0
-
+#invincibleで無敵時間なのかを判別する
+invincible : bool
+invincible = False
+invincible_end_time = 0
+#無敵時間を設定(ミリ秒)
+INVINCIBLE_DURATION: int
+INVINCIBLE_DURATION = 10000
+start = pg.time.get_ticks()
 # --- メインループ ---
 running = True
 while running:
@@ -177,7 +184,14 @@ while running:
             pencil = Pencil(player.rect.centerx, player.rect.top)
             all_sprites.add(pencil)
             pencils.add(pencil)
+        # スコアが15以上であればiキーを押したときにinvincibleフラグをオンにする
+        if event.type == pg.KEYDOWN and event.key == pg.K_i and score >=15:
+            if invincible == False:
+                invincible = True
+                start = pg.time.get_ticks()
 
+    current = pg.time.get_ticks()
+    elapsed = current - start
     # まとめて更新（Player.update は内部でキー取得している）
     all_sprites.update()
 
@@ -188,11 +202,16 @@ while running:
         e = Enemy()
         enemies.add(e)
         all_sprites.add(e)
-
     # 衝突判定：敵の弾とプレイヤー
+    # 衝突時の無敵モードを判定する
     if pg.sprite.spritecollideany(player, enemy_reports):
-        running = False  # ゲームオーバー
-
+        current = pg.time.get_ticks()#現在時刻の入手
+        if invincible == True:
+            running = True
+            if elapsed >= INVINCIBLE_DURATION:#30秒以上たったら無敵モードを解除
+                invincible = False
+        elif invincible == False:
+            running = False # 無敵モード解除状態で敵に当たるとゲームオーバー
     # 描画
     screen.blit(background, (0, 0))
     all_sprites.draw(screen)
